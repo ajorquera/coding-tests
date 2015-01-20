@@ -11,10 +11,6 @@ this.status = status || false;
     this.cellName = 'cell[' + this.x_pos + '][' + this.y_pos + ']';
 
 
-
-
-
-
     var beatwatcher=eObserve(this);
 
     beatwatcher.on('update',function(changes){
