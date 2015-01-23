@@ -1,31 +1,129 @@
 <!DOCTYPE html>
-<head>
-	<title>game of live test</title>
-	<meta charset="utf-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1">
-	<!-- global use -->
-	<script type="text/javascript" src="js/raphael-min.js"></script>
-	<script src="js/jquery.js"></script>
-	<script type="text/javascript" src="js/underscore.js"></script>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=0.7">
+		<title>Conway's Game of life</title>
+		<!-- css style files-->
+		<!--flat_ui-->
+		<link rel="stylesheet" media="all" type="text/css" href="css/jquery.mobile.flatui.min.css" >
+			<!-- /css style files-->
+			<!-- raw css codes-->
+			<!-- / css codes-->
+			<!--javascript  files-->
+			<!--underscore js-->
+			<script type="text/javascript" src="js/underscore.js"></script>
+			<!--raphael js-->
+			<script type="text/javascript" src="js/raphael-min.js"></script>
+			<!-- jquery  -->
+			<script type="text/javascript" src="js/jquery.js" ></script>
+			<!-- jqm  -->
+			<script type="text/javascript" src="js/jquery.mobile-1.4.5.js" ></script>
+			<!--/javascript  files -->
+			
+		</head>
+		<!-- becouse the developinglive environment opening anc closing tags of body and the first main pag div
+	must be close one each other no chars in the middle something like <body><div  or </body></di
+	-->
+	<body>
+		<div data-role="page" id="main-page" data-dom-cache="false " data-fetch='always'>
+			<div data-role="header" data-position="fixed" data-theme="a" data-tap-toggle="false">
+				
+				<a href="#left_hidden_panel" data-icon='gear' data-theme="a" data-iconpos="notext">menu</a>
+				<h1>
+				Game of life                                   </h1>
+				<a href="#right_hidden_panel" data-icon="info" data-theme="f" data-iconpos="notext">info</a>
+				
+			</div><!--/header-->
+			<div data-role="content" style="padding-top: 50px;" align="right">
+				<div id="game_container"></div>
+			</div><!--/content-->
+ 			<div data-role="footer"  data-theme="a" data-position="fixed" class="footer-docs" >
+                <!-- an inside div is necesary for footer fixed displacement with panel-->
+                <div class="inner_footer">
+                    <div class="ui-grid-a">
+                        <div class="ui-block-a">
+                        	<fieldset data-role="controlgroup" data-type="horizontal" data-mini="true" data-theme="b">
+    	<button  data-icon="refresh" data-iconpos="notext"  id="refresh_bt" >refresh</button>
+        <button data-icon="forbidden" data-iconpos="notext" id="stop_bt" >Stop</button>
+        <button data-icon="carat-r" data-iconpos="notext" id="play_bt">play</button>
+        <button data-icon="arrow-r" data-iconpos="notext" id="step_bt">step</button>
+							</fieldset>
+							</div>
+                        <div class="ui-block-b">Iterations: <label id="gen_status"style="display:inline-block">0</label></div>
+                    </div><!-- /grid-a -->
+                    <div class="ui-grid-a">
+                        <div class="ui-block-a">POB implementation by <a href="https://twitter.com/lemyskaman">@lemyskaman</a></div>
+                        <div class="ui-block-b"></div>
+                    </div>
+                </div>
 
-</head>
-<body style="font-family: Lucida Console, Monaco, monospace; text-align:center;">
-	<div id="game_container"></div>
-	<p>this is a working progress, text based game of live made by @lemyskaman
-	stroke "p" key to play the live, "s" to stop it  </p>
-	<table align="center">
-		<caption></caption>
+            </div>
+			<div data-role="panel" id="left_hidden_panel" class="panel_left" data-display="overlay" data-theme="f">
+				<ul data-role="listview"   >
+					<li data-icon="arrow-r"   >
+						<a href="#" data-rel="close" data-ajax="false">
+							Close 
+						</a>
+					</li>
+				</ul>
 
-		<tbody id="gamefield">
+				<div id="boton_div" style="height:20px;"></div>
+				<label for="size_input">Cells size (px):</label>
+    			<input name="size_input" id="size_input" min="4" max="20" step="1" value="20" type="range">
 
-		</tbody>
-	</table>
-	<p>soon it will have nice raphael js svg based graphics </p>
+    			<div id="boton_div" style="height:20px;"></div>
+				<label for="width_input">width (cells number):</label>
+    			<input name="width_input" id="width_input" min="4" max="100" step="1" value="30" type="range">	
+
+    			<div id="boton_div" style="height:20px;"></div>
+				<label for="height_input">height (cells number):</label>
+    			<input name="height_input" id="height_input" min="4" max="100" step="1" value="20" type="range">					
 
 
-	<script type="text/javascript" src="js/Cell.js"></script>
-	<script type="text/javascript" src="js/Matrix.js"></script>
+				
+				<label for="speed_input">iterations interval (ms):</label>
+    			<input name="speed_input" id="speed_input" min="50" max="2000" step="50" value="800" type="range">
 
-	
-</body>
+    			<div id="boton_div" style="height:20px;"></div>
+    			<label for="animations_select">animations</label>
+				<select name="animations_select" id="animations_select" data-role="slider" data-mini="true">
+    			<option value="">OFF</option>
+    			<option value="1" selected="">ON</option>
+				</select>
+
+				<div id="boton_div" style="height:20px;"></div>
+				<label for="delay_input">animations delay (ms):</label>
+    			<input name="delay_input" id="delay_input" min="100" max="500" step="50" value="200" type="range">
+
+
+
+
+			</div>
+			<!-- /panel left_hidden_panel -->
+			<div data-role="panel" id="right_hidden_panel" data-position="right" data-position-fixed="true" data-display="overlay" data-theme="f">
+				<ul data-role="listview"   >
+					<li data-icon="delete"   >
+						<a href="#" data-rel="" data-ajax="false" data-rel="close">
+							Cerrar
+						</a>
+					</li>
+				</ul>
+				<div id="boton_div" style="height:20px;"></div>
+				<div>
+					
+				<p>This is another version of the pupular Conway's Game of life, it was developed with POB techniques to make the code scalable and easy to maintain.</p>
+
+				<p>All the game was written in javascript using jquery jquery mobile underscore and raphael js framewokr </p>
+
+				</div>
+				
+			</div>
+			<!-- /panel left_hidden_panel -->
+						
+		</div>
+		<script type="text/javascript" src="js/Cell.js"></script>
+		<script type="text/javascript" src="js/Matrix.js"></script>
+		<script type="text/javascript" src="js/Game.js"></script>
+	</body>
 </html>

@@ -1,8 +1,9 @@
 var Matrix = {
 
     //cell surface size in px^2
-    cellsBodySize: 20,
-
+    animation:true,
+    cellsBodySize: 4,
+    delay:100,
     cellsBodies:[],
     cells: [],
 
@@ -42,7 +43,7 @@ var Matrix = {
         }
         //Boolean(_.random(0, 1));
 
-        console.log('seeded!');
+        console.log('done randomSeed');
     },
 
 
@@ -63,9 +64,6 @@ var Matrix = {
             this.cells[j]=[];
             for (var i = 0; i < this.m; i++) {
 
-                
-
-
                 // Scaling up to draw a rectangle at (x,y)
                 var x = i * this.cellsBodySize;
                 var y = j * this.cellsBodySize;
@@ -79,23 +77,41 @@ var Matrix = {
                 current.showStatus();
                 ////console.log(i);
                 this.cells[j][i] = current;
-                console.log(j+","+i+" "+current.status+" - "+this.cells_status[j][i] );
-
-
-
-
+                //console.log(j+","+i+" "+current.status+" - "+this.cells_status[j][i] );
 
                 //console.log(this.cellsBodies[i][j].id());
             }
 
 
+
         }
+        console.log("done with build");
 
+    },
+    beat:function(){
 
+        //console.log(this.cellsls[0][0]);
+        this.next_gen_status = [];
+        var pre_next_gen=[];
+        for (var i = 0; i < this.n; i++) {
+            ////console.log(i);
+            pre_next_gen = [];
+            //console.log(cellsNews.length);
+            for (var j = 0; j < this.m; j++) {
+                //console.log(i + " " + j);
+                current = this.cells[i][j];
+                //ficonsole.log(current.name + " " + current.status);
+                ////console.log(current.aliveNeighbors(cellsNews));
+                pre_next_gen.push(current.beat());
+                //console.log(current.beat());
+                //console.log(current.name + " " + current.status);
 
+            }
 
-
-
+            this.next_gen_status.push(pre_next_gen);
+        }
+        this.cells_status = this.next_gen_status;
+        //console.log("matrix beat");
 
     }
 
@@ -103,18 +119,3 @@ var Matrix = {
 
 }
 
-
-console.log(Matrix.cells_status);
-Matrix.m = 4;
-Matrix.n = 2;
-Matrix.randomSeed();
-console.log(Matrix.cells_status);
-
-Matrix.build();
-
-
-$("#game_container").find("svg").css({
-    "border-style": "solid",
-    "border-width": "5px",
-    "border-color": "#ccc",
-});
