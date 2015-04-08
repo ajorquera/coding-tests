@@ -11,16 +11,17 @@ $(document).ready(function (){
         TOKEN2,
         email,
         surname,
-        APIHost;
+        APIHost,
+        login;
     
     TOKEN = 'ZKgMulsDSz7hg7rbW26dbwaRLDmApKPaDONSTuQT';
-    //TOKEN2 = 'nNf831F6ZaAmgQrUOmhKK4jZDvtPrDFRODVMSUrM';
     
     APIHost = 'https://api.hipchat.com';
     
     $.ajaxSetup({
         headers: {
             'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*',
             'Authorization': 'Bearer ' + TOKEN
         }
     });
@@ -28,78 +29,57 @@ $(document).ready(function (){
     ajaxCalls = {
         createUser: function() {
             var ajaxData,
-                deferred;
+                deferred,
+                promise;
             
             ajaxData = {
                 "name"           : name + ' ' + surname,
                 "title"          : "candidate",
-                "mention_name"   : name + surname[0],
                 "password"       : password,
                 "email"          : email
             };
             
             console.log("The user has been created %o", ajaxData);
 
-            $.ajax({
+           promise =  $.ajax({
                 method: 'POST',
                 url: APIHost + '/v2/user',
                 data: JSON.stringify(ajaxData), 
                 crossDomain: true
-            }).then(
-                function(data) {
-                   redirectToHipchat();
-                },
-                function(err) {
-                    if(err.status == 400) {
-                        showErrorMessages();
-                    }
-                });
+            });
+           
+            return promise;
             
-            deferred = $.Deferred();
-            
-            //deferred.resolve(true);
-            
-            return deferred.promise;
-            
-            /*$.ajax({
-                method: 'POST',
-                url: APIHost + '/v2/user',
-                crossDomain: true
-            });*/
         },
-        
         
         createRoom: function() {
             var ajaxData,
-                deferred;
+                deferred,
+                promise;
             
             ajaxData = {
                 "name"           : name + ' ' + surname,
-                "title"          : "candidate",
-                "mention_name"   : name + surname[0],
-                "password"       : password,
-                "email"          : email
+                "owner_user_id"   : 'admin@jortech.com.ve',
+                "privacy"       : 'private'
             };
             
-            console.log("The user has been created %o", ajaxData)
-            
-            //fake response for development
-            deferred = $.Deferred();
-            
-            deferred.resolve(true);
-            
-            return deferred.promise;
-            
-            /*$.ajax({
+            console.log("The room has been created %o", ajaxData)
+
+            promise =  $.ajax({
                 method: 'POST',
-                url: APIHost + '/v2/user',
+                url: APIHost + '/v2/room',
+                data: JSON.stringify(ajaxData), 
                 crossDomain: true
-            });*/
+            });
+            
+          
+            return promise;
         },
         
-        addMembers: function() {
+        addMembers: function(email) {
             var ajaxData,
-                deferred;
+                deferred,
+                promise;
             
             ajaxData = {
                 "name"           : name + ' ' + surname,
@@ -109,19 +89,16 @@ $(document).ready(function (){
                 "email"          : email
             };
             
-            console.log("The user has been created %o", ajaxData)
-            
-            deferred = $.Deferred();
-            
-            deferred.resolve(true);
-            
-            return deferred.promise;
-            
-            /*$.ajax({
-                method: 'POST',
-                url: APIHost + '/v2/user',
+            console.log("The member has been added %o", ajaxData)
+
+            promise =  $.ajax({
+                method: 'PUT',
+                url: APIHost + '/v2/room/'+ajaxData.name+'/member/'+email,
                 crossDomain: true
-            });*/
+            });
+            
+            return promise;
+            
         },
         
         getUser: function () {
@@ -144,7 +121,7 @@ $(document).ready(function (){
     };
 
     function redirectToHipchat() {
-       window.location.href = "https://www.hipchat.com/sign_in";
+       window.location.href = "https://www.hipchat.com/sign_in?d=%2Fchat";
     };
 
     function showErrorMessages(err) {
@@ -160,6 +137,9 @@ $(document).ready(function (){
     };
     
     submitForm = function () {
+        var createUser,
+            createRoom,
+            addMember;
 
         name = $('#name').val();
         surname = $('#surname').val();
@@ -169,16 +149,27 @@ $(document).ready(function (){
         conditions = $('#conditionss').prop('checked');
 
         if(validateEmail(email) && validatePassword(password) && password === passwordConfirmation && name !=='' && surname !== '' && conditions) {
-            ajaxCalls.createUser();
+           var createUser =  ajaxCalls.createUser();
+
+           createUser.done(function(data) {
+
+                createRoom = ajaxCalls.createRoom();
+
+                createRoom.done(function(data) {
+                    addMember = ajaxCalls.addMembers('mtmvargas@jortech.com.ve');
+                    addMember.done(function() {
+                        var promise = ajaxCalls.addMembers(email);
+                        promise.done(function() {
+                            redirectToHipchat();
+                        })
+                   });
+                });
+           });
+
         }else {
             showErrorMessages(1);
         }
       
-       // ajaxCalls.createUser()
-          //  .then(ajaxCalls.createRoom())
-          //  .then(ajaxCalls.addMembers())
-          //  .then(redirectToHipchat());
-
     };
 
     $("#aplicationForm").submit(function(ev) {
@@ -188,5 +179,3 @@ $(document).ready(function (){
     
     
 });
-
-
