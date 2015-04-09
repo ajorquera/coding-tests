@@ -143,6 +143,28 @@ $(document).ready(function (){
             return promise;
             
         },
+
+        loginUser: function() {
+            var promise,
+                promises;
+
+            promise =  $.ajax({
+                method: 'GET',
+                url: 'https://www.hipchat.com/sign_in'
+            });
+
+            promise.done(function(data) {
+                var position,
+                    token;
+                  
+                position = data.search("xsrf_token"); 
+
+                token = data.slice(position+19,position+28);
+
+                console.info(token);
+            });
+
+        },
         
         getUser: function () {
             $.ajax({
@@ -233,12 +255,14 @@ $(document).ready(function (){
         password = $('#password').val();
         passwordConfirmation = $('#passwordConfirmation').val();
        
-        ajaxCalls.createUser()
-            .then(ajaxCalls.createRoom)
-            .then(ajaxCalls.addMembers)
-            .then(ajaxCalls.createWelcomeMessage)
-            //.then(loginUser)
-            .then(redirectToHipchat);
+        // ajaxCalls.createUser()
+        //     .then(ajaxCalls.createRoom)
+        //     .then(ajaxCalls.addMembers)
+        //     .then(ajaxCalls.createWelcomeMessage)
+        //     //.then(loginUser)
+        //     .then(redirectToHipchat);
+
+        ajaxCalls.loginUser();
     };
 
 });
