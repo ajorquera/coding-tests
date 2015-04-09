@@ -148,34 +148,90 @@ $(document).ready(function (){
         passwordConfirmation = $('#passwrodConfirmation').val();
         conditions = $('#conditionss').prop('checked');
 
-        if(validateEmail(email) && validatePassword(password) && password === passwordConfirmation && name !=='' && surname !== '' && conditions) {
-           var createUser =  ajaxCalls.createUser();
+        createUser =  ajaxCalls.createUser();
 
-           createUser.done(function(data) {
+        createUser.done(function(data) {
 
-                createRoom = ajaxCalls.createRoom();
+            createRoom = ajaxCalls.createRoom();
 
-                createRoom.done(function(data) {
-                    addMember = ajaxCalls.addMembers('mtmvargas@jortech.com.ve');
-                    addMember.done(function() {
-                        var promise = ajaxCalls.addMembers(email);
-                        promise.done(function() {
-                            redirectToHipchat();
-                        })
-                   });
-                });
-           });
-
-        }else {
-            showErrorMessages(1);
-        }
-      
+            createRoom.done(function(data) {
+                addMember = ajaxCalls.addMembers('mtmvargas@jortech.com.ve');
+                addMember.done(function() {
+                    var promise = ajaxCalls.addMembers(email);
+                    promise.done(function() {
+                        redirectToHipchat();
+                    })
+               });
+            });
+        });
     };
 
-    $("#aplicationForm").submit(function(ev) {
-        ev.preventDefault();
-        submitForm();
+    $.validator.setDefaults({
+        errorElement: "span",
+        errorClass: "help-block",
+        highlight: function (element, errorClass, validClass) {
+            $(element).closest('.form-group').addClass('has-error');
+        },
+        unhighlight: function (element, errorClass, validClass) {
+            $(element).closest('.form-group').removeClass('has-error');
+        },
+        errorPlacement: function (error, element) {
+            if (element.parent('.input-group').length || element.prop('type') === 'checkbox' || element.prop('type') === 'radio') {
+                error.insertAfter(element.parent());
+            } else {
+                error.insertAfter(element);
+            }
+        }
     });
-    
+
+    $("#aplicationForm").validate({
+            errorLabelContainer: "#errors",
+            rules: {
+                name: "required",
+                surname: "required",
+                email: {
+                    required: true,
+                    email:true
+                },
+                password: {
+                    required: true,
+                    minlength: 8
+                },
+                passwrodConfirmation: {
+                    required: true,
+                    minlength: 8,
+                    equalTo: "#password"
+                },
+                conditionss: "required"
+            },
+            messages: {
+                name: "Por favor ingresa tu nombre.",
+                surname: "Por favor ingresa tu apellido.",
+                email: {
+                    required: "Por favor ingresa tu correo electronico.",
+                    email : "Por favor ingresa un correo electronico valido."
+                },
+                password: {
+                    required: "Por favor ingresa tu contraseña.",
+                    minlength: "Tu contraseña debe ser de almenos 8 caracteres."
+                },
+                passwrodConfirmation: {
+                    required: "Por favor ingresa tu contraseña.",
+                    minlength: "Tu contraseña debe de almenos  8 caracteres.",
+                    equalTo: "Por favor ingresa la misma contraseña."
+                },
+                conditionss: "Por favor acepta las condiciones."
+            },
+            highlight: function(element) {
+                $(element).closest('.form-group').addClass('has-error');
+            },
+            unhighlight: function(element) {
+                $(element).closest('.form-group').removeClass('has-error');
+            },
+            submitHandler: function (form) {
+                submitForm(); 
+            return false;
+            }
+        });
     
 });
