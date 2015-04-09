@@ -1,2 +1,42 @@
-jobApplication/js/jquery-uritemplate.1.0.min.sublime-project
-jobApplication/js/jquery-uritemplate.1.0.min.sublime-workspace
+### SublimeText template
+# cache files for sublime text
+*.cache
+
+# workspace files are user-specific
+*.sublime-workspace
+*.sublime-project
+
+
+# sftp configuration file
+sftp-config.json
+
+
+### JetBrains template
+# Covers JetBrains IDEs: IntelliJ, RubyMine, PhpStorm, AppCode, PyCharm
+
+*.iml
+
+## Directory-based project format:
+.idea/
+
+## File-based project format:
+*.ipr
+*.iws
+
+## Plugin-specific files:
+
+# IntelliJ
+out/
+
+# mpeltonen/sbt-idea plugin
+.idea_modules/
+
+# JIRA plugin
+atlassian-ide-plugin.xml
+
+# Crashlytics plugin (for Android Studio and IntelliJ)
+com_crashlytics_export_strings.xml
+crashlytics.properties
+crashlytics-build.properties
+
+
