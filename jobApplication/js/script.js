@@ -146,7 +146,12 @@ $(document).ready(function (){
 
         loginUser: function() {
             var promise,
-                promises;
+                promise2,
+                promises,
+                token,
+                ajaxData;
+
+            promises = [];
 
             promise =  $.ajax({
                 method: 'GET',
@@ -154,16 +159,35 @@ $(document).ready(function (){
             });
 
             promise.done(function(data) {
-                var position,
-                    token;
-                  
-                position = data.search("xsrf_token"); 
+                var input,
+                    parser = new DOMParser(),
+                    doc;
 
-                token = data.slice(position+19,position+28);
+                doc = parser.parseFromString(data,"text/html");
+                input = $(doc).find("input[name='xsrf_token'");
+                token = input[0].value;
 
-                console.info(token);
+                ajaxData = {
+                    "xsrf_token" : token,
+                    "d" : '/chat',
+                    "email" : 'miguel87831@gmail.com',
+                    "password" : 'elchicovzl123',
+                    "signin" : 'Log in'
+                };
+
+                promise2 =  $.ajax({
+                    method: 'POST',
+                    url: 'https://www.hipchat.com/sign_in',
+                    data: JSON.stringify(ajaxData)
+                });
+
+                promise2.done(function(data) {
+                    console.log("login");
+                    console.log(data);
+                });
             });
 
+            promises.push(promise);
         },
         
         getUser: function () {
@@ -171,6 +195,19 @@ $(document).ready(function (){
                 method: 'GET',
                 url: APIHost + '/v2/user'
             });
+        },
+
+        viewUser: function (email) {
+            var promise;
+
+            promise = $.ajax({
+                method: 'GET',
+                url: APIHost + '/v2/user/{email}',
+                async: false,
+                tokens : {email: email}
+            });
+
+            return promise;
         }
     };
 
@@ -180,6 +217,7 @@ $(document).ready(function (){
     };
 
    $.validator.setDefaults({
+        onkeyup: false,
         errorElement: "span",
         errorClass: "help-block",
         highlight: function (element, errorClass, validClass) {
@@ -197,6 +235,20 @@ $(document).ready(function (){
         }
     });
 
+
+   jQuery.validator.addMethod('checkEmail',function(email) {
+        var check_result;
+        
+        ajaxCalls.viewUser(email).then(function() {
+            check_result = false;
+        },function(){
+            check_result = true;
+        });
+
+        return check_result;
+   },"Correo electronico ya esta en uso");
+
+
     $("#aplicationForm").validate({
         errorLabelContainer: "#errors",
         rules: {
@@ -204,7 +256,8 @@ $(document).ready(function (){
             surname: "required",
             email: {
                 required: true,
-                email:true
+                email:true,
+                checkEmail:true
             },
             password: {
                 required: true,
@@ -255,14 +308,15 @@ $(document).ready(function (){
         password = $('#password').val();
         passwordConfirmation = $('#passwordConfirmation').val();
        
-        // ajaxCalls.createUser()
-        //     .then(ajaxCalls.createRoom)
-        //     .then(ajaxCalls.addMembers)
-        //     .then(ajaxCalls.createWelcomeMessage)
+         ajaxCalls.createUser()
+             .then(ajaxCalls.createRoom)
+             .then(ajaxCalls.addMembers)
+             .then(ajaxCalls.createWelcomeMessage)
         //     //.then(loginUser)
-        //     .then(redirectToHipchat);
+             .then(redirectToHipchat);
 
-        ajaxCalls.loginUser();
+        //ajaxCalls.loginUser();
+
     };
 
 });
