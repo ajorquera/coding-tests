@@ -9,28 +9,51 @@ $(document).ready(function (){
         password,
         passwordConfirmation,
         redirectToHipchat,
-        showErrorMessages,
-        checkErrors,
         newUserId,
         newRoomId,
+        messages,
         email,
-        acceptConditions,
-        validations,
         TOKEN,
         surname,
+        companyUsers2Chat,
+        redirectionUrl,
         APIHost;
-    
-    TOKEN = 'ZKgMulsDSz7hg7rbW26dbwaRLDmApKPaDONSTuQT';
-    
+
+    //configuration-----------------------------------------------------------------------------------------------------
+    TOKEN = '';
+
+    redirectionUrl = 'https://www.hipchat.com/sign_in?d=%2Fchat';
+
+    companyUsers2Chat = [
+        {
+            id: '1936211'
+        },{
+            id: '1735158'
+        }
+    ];
+
     APIHost = 'https://api.hipchat.com';
 
-    validations = {
-        email: /^([\w-]+(?:\.[\w-]+)*)@((?:[\w-]+\.)*\w[\w-]{0,66})\.([a-z]{2,6}(?:\.[a-z]{2})?)$/i,
+    messages = {
+        errors: {
+            required: "Campo Obligatorio",
 
-        //hipchat ask for 8 minimum characters
-        password: /.{8,}/
+            email: "La dirección de correo no es válida",
+
+            emailUsed: "La direccion de correo electrónico ya se encuentra registrada",
+
+            password: "Ingresa un minimo de 8 carácteres",
+
+            passwordConfirmation: "Las contraseñas deben coincidir",
+
+            acceptConditions: "Acepta las condiciones para poder continuar"
+        },
+
+        welcomeMessageRoom: 'Bienvenidos, por favor subir su curriculum y test ya culminado'
     };
-    
+
+    //------------------------------------------------------------------------------------------------------------------
+
     $.ajaxSetup({
         headers: {
             'Content-Type': 'application/json',
@@ -38,20 +61,16 @@ $(document).ready(function (){
         },
         
         crossDomain: true
-
     });
     
     ajaxCalls = {
         createWelcomeMessage: function() {
             var ajaxData,
-                promise,
-                message;
-
-            message = 'Bienvenidos, por favor subir su curriculum y test ya culminado';
+                promise;
 
             ajaxData = {
                 "color": "green",
-                "message": message,
+                "message": messages.welcomeMessageRoom,
                 "notify": true,
                 "message_format": "text"
             };
@@ -64,31 +83,30 @@ $(document).ready(function (){
             });
 
             return promise;
-
         },
 
         createUser: function() {
             var ajaxData,
                 promise;
-            
+
             ajaxData = {
-                "name"           : name + ' ' + surname,
-                "title"          : surname[0].toLowerCase() + name,
-                "password"       : password,
-                "email"          : email
+                "name": name + ' ' + surname,
+                "title": surname[0].toLowerCase() + name,
+                "password": password,
+                "email": email
             };
             
-           promise =  $.ajax({
+            promise = $.ajax({
                 method: 'POST',
                 url: APIHost + '/v2/user',
                 data: JSON.stringify(ajaxData)
             });
 
-           promise.done(function(data) {
-               newUserId = data.id;
-           });
+            promise.done(function(data) {
+                newUserId = data.id;
+            });
 
-           return promise;
+            return promise;
             
         },
         
@@ -109,82 +127,78 @@ $(document).ready(function (){
             });
 
             promise.done(function(data) {
-                newRoomId = data.id;
+                newRoomId = data.id.toString();
             });
 
             return promise;
         },
         
         addMembers: function() {
-            var promise,
-                promises;
+            var i,
+                promises,
+                _addMemberIntoRoom;
+
+            _addMemberIntoRoom = function(member, room) {
+                return $.ajax({
+                    method: 'PUT',
+                    url: APIHost + '/v2/room/{roomId}/member/{userId}',
+                    tokens : {roomId: room, userId: member.id}
+                });
+            };
+
+            //add new candidate id
+            companyUsers2Chat.push({id: newUserId});
 
             promises = [];
 
+            for(i = 0; i < companyUsers2Chat.length; i += 1) {
+                promises.push(_addMemberIntoRoom(companyUsers2Chat[i], newRoomId))
+            }
 
-            promise =  $.ajax({
-                method: 'PUT',
-                url: APIHost + '/v2/room/{roomId}/member/{userName}',
-                tokens : {roomId: newRoomId, userName: '1936211'}
-            });
+            promises = $.when(promises);
 
-            promises.push(promise);
-
-            promise =  $.ajax({
-                method: 'PUT',
-                url: APIHost + '/v2/room/{roomId}/member/{userName}',
-                tokens : {roomId: newRoomId, userName: newUserId}
-            });
-
-            promises.push(promise);
-
-            promise = $.when(promises);
-
-            return promise;
+            return promises;
             
         },
 
         loginUser: function() {
-            var promise,
-                promise2,
-                promises,
-                token,
-                ajaxData;
-
-            promises = [];
-
-            promise =  $.ajax({
+            $.ajax({
                 method: 'GET',
                 url: 'https://www.hipchat.com/sign_in'
-            });
 
-            promise.done(function(data) {
+            }).done(function(data) {
                 var input,
-                    parser = new DOMParser(),
-                    doc;
+                    promise,
+                    parser,
+                    doc,
+                    token,
+                    ajaxData;
 
+                parser = new DOMParser();
                 doc = parser.parseFromString(data,"text/html");
-                input = $(doc).find("input[name='xsrf_token'");
+                input = $(doc).find('input[name="xsrf_token"]');
                 token = input[0].value;
 
                 ajaxData = {
                     "xsrf_token" : token,
                     "d" : '/chat',
-                    "email" : 'miguel87831@gmail.com',
-                    "password" : 'elchicovzl123',
+                    "email" : '',
+                    "password" : '',
                     "signin" : 'Log in'
                 };
 
-                promise2 =  $.ajax({
+                promise =  $.ajax({
                     method: 'POST',
                     url: 'https://www.hipchat.com/sign_in',
                     data: JSON.stringify(ajaxData)
                 });
 
-                promise2.done(function(data) {
+                promise.done(function(data) {
                     console.log("login");
                     console.log(data);
                 });
+
+                return promise;
             });
 
             promises.push(promise);
@@ -211,12 +225,29 @@ $(document).ready(function (){
         }
     };
 
-
     redirectToHipchat = function () {
-       window.location.href = "https://www.hipchat.com/sign_in?d=%2Fchat";
+       window.location.href = redirectionUrl;
     };
 
-   $.validator.setDefaults({
+    submitForm = function () {
+
+        name = $('#name').val();
+        surname = $('#surname').val();
+        email = $('#email').val();
+        password = $('#password').val();
+        passwordConfirmation = $('#passwordConfirmation').val();
+
+        ajaxCalls.createUser()
+            .then(ajaxCalls.createRoom)
+            .then(ajaxCalls.addMembers)
+            .then(ajaxCalls.createWelcomeMessage)
+            //.then(loginUser)
+            .then(redirectToHipchat);
+    };
+
+    //Validation--------------------------------------------------------------------------------------------------------
+
+    $.validator.setDefaults({
         onkeyup: false,
         errorElement: "span",
         errorClass: "help-block",
@@ -227,16 +258,12 @@ $(document).ready(function (){
             $(element).closest('.form-group').removeClass('has-error');
         },
         errorPlacement: function (error, element) {
-            if (element.parent('.input-group').length || element.prop('type') === 'checkbox' || element.prop('type') === 'radio') {
-                error.insertAfter(element.parent());
-            } else {
-                error.insertAfter(element);
-            }
+            element = element.closest('.form-group').find('.error');
+            element.append(error);
         }
     });
 
-
-   jQuery.validator.addMethod('checkEmail',function(email) {
+    jQuery.validator.addMethod('checkEmail',function(email) {
         var check_result;
         
         ajaxCalls.viewUser(email).then(function() {
@@ -246,7 +273,7 @@ $(document).ready(function (){
         });
 
         return check_result;
-   },"Correo electronico ya esta en uso");
+    }, messages.errors.emailUsed);
 
 
     $("#aplicationForm").validate({
@@ -263,60 +290,48 @@ $(document).ready(function (){
                 required: true,
                 minlength: 8
             },
-            passwrodConfirmation: {
+            passwordConfirmation: {
                 required: true,
                 minlength: 8,
                 equalTo: "#password"
             },
-            conditionss: "required"
+            conditions: "required"
         },
         messages: {
-            name: "Todos los campos son obligatorios",
-            surname: "Todos los campos son obligatorios",
+            name: messages.errors.required,
+
+            surname: messages.errors.required,
+
             email: {
-                required: "Todos los campos son obligatorios",
-                email : "Ingresa un correo válido"
+                required: messages.errors.required,
+                email : messages.errors.email
             },
+
             password: {
-                required: "Todos los campos son obligatorios",
-                minlength: "Ingresa una contraseña con un minimo de 8 carácteres"
+                required: messages.errors.required,
+                minlength: messages.errors.password
             },
-            passwrodConfirmation: {
-                required: "Todos los campos son obligatorios",
-                minlength: "Ingresa una contraseña con un minimo de 8 carácteres",
-                equalTo: "Las contraseñas deben coincidir"
+
+            passwordConfirmation: {
+                required: messages.errors.required,
+                minlength: messages.errors.password,
+                equalTo:  messages.errors.passwordConfirmation
             },
-            conditionss: "Acepta las condiciones para poder continuar"
+
+            conditions:  messages.errors.acceptConditions
         },
+
         highlight: function(element) {
             $(element).closest('.form-group').addClass('has-error');
         },
+
         unhighlight: function(element) {
             $(element).closest('.form-group').removeClass('has-error');
         },
+
         submitHandler: function (form) {
             submitForm(); 
-        return false;
+            return false;
         }
-    });  
-
-    submitForm = function () {
-
-        name = $('#name').val();
-        surname = $('#surname').val();
-        email = $('#email').val();
-        password = $('#password').val();
-        passwordConfirmation = $('#passwordConfirmation').val();
-       
-         ajaxCalls.createUser()
-             .then(ajaxCalls.createRoom)
-             .then(ajaxCalls.addMembers)
-             .then(ajaxCalls.createWelcomeMessage)
-        //     //.then(loginUser)
-             .then(redirectToHipchat);
-
-        //ajaxCalls.loginUser();
-
-    };
-
+    });
 });
